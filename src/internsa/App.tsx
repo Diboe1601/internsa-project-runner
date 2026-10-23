@@ -236,7 +236,6 @@ function StudentDashboard(ctx:Context) {
   <section className="sd-stats">{stats.map(({label,value,href,cta,icon:Icon,dark})=><article key={label} className={`sd-stat${dark?' dark':''}`} data-testid={`stat-${label.toLowerCase().replaceAll(' ','-')}`}><span className="sd-stat-icon"><Icon size={17}/></span><p>{label}</p><strong>{value}</strong><Link href={href} className="text-link">{cta} <ArrowRight size={13}/></Link></article>)}</section>
   <section className="section-block"><div className="section-top"><div><h2>Closing soon</h2><p>Don't miss these deadlines.</p></div><Link href="/explore" className="text-link">View all <ArrowRight size={13}/></Link></div><OpportunityGrid items={closing} empty="No currently published samples."/></section>
   <section className="section-block"><div className="section-top"><div><h2>Career guides</h2><p>Prepare for your next step.</p></div><Link href="/guides" className="text-link">All guides <ArrowRight size={13}/></Link></div><div className="quick-pills">{guides.slice(0,4).map(g=><Link key={g.id} href="/guides" className="pill"><BookOpen size={13}/> {g.title}</Link>)}</div></section>
-  <section className="section-block notice warning"><ShieldCheck size={14}/> Sample opportunities, not live vacancies. Always verify on the organisation's official website. InternSA never charges application fees.</section>
  </main>
 }
 function Explore(ctx:Context) {
@@ -259,7 +258,6 @@ function Explore(ctx:Context) {
   </div>
   <div className="results-head"><strong data-testid="text-result-count">{filtered.length} {filtered.length===1?'opportunity':'opportunities'}</strong><label style={{display:'flex',alignItems:'center',gap:7,fontSize:10}}>Sort <select className="select" style={{width:150}} value={sort} onChange={e=>setSort(e.target.value)} aria-label="Sort results" data-testid="select-sort"><option value="newest">Newest</option><option value="closing">Closing soon</option><option value="relevant">Featured first</option></select></label></div>
   <OpportunityGrid items={filtered} empty="Try removing a filter or searching a broader term."/>
-  <div style={{marginTop:20}} className="notice"><strong>Trust note:</strong> samples use example source links and are not employer-verified. This prototype does not provide working external application portals.</div>
  </main>
 }
 
@@ -419,7 +417,6 @@ function AdminOverview(ctx:Context) {
   <div className="metric-grid">{[['Published samples',live.length],['Apply intents',recent.filter(a=>a.kind==='apply').length],['Saved actions',recent.filter(a=>a.kind==='save').length],['Reports to review',pending.length]].map(([label,value],i)=><article className="metric" key={String(label)} data-testid={`metric-${i}`}><span>{label}</span><strong>{value}</strong><small>Local records · last {period} days</small></article>)}</div>
   <section className="panel section-block"><div className="section-top"><div><h2>Apply intent activity</h2><p>Recorded intents by day · derived from local activity history</p></div><ActivityIcon size={18} color="#294f81"/></div><div className="chart" role="img" aria-label="Daily apply intent counts">{lastDays.map(d=><div className="chart-bar" key={d.key} style={{height:`${Math.max(d.count?12:4,d.count/max*155)}px`}}><strong>{d.count}</strong></div>)}</div><div className="chart-labels">{lastDays.map(d=><span key={d.key}>{d.label}</span>)}</div></section>
   <section className="panel section-block"><div className="section-top"><div><h2>Listing mix</h2><p>Status totals from current saved opportunity records</p></div><Link href="/admin/opportunities" className="text-link" data-testid="link-manage-listings">Manage listings <ArrowRight size={13}/></Link></div><div className="quick-pills">{(['published','draft','closed','archived'] as const).map(status=><span className="tag" key={status}>{status}: {ctx.store.opportunities.filter(o=>o.status===status).length}</span>)}</div></section>
-  <section className="section-block notice warning"><strong>Illustrative dashboard, not production analytics.</strong> Counts include seed activity so the prototype has a useful first-run view. New actions, admin changes, and reports update the dashboard locally.</section>
  </div></div></main>
 }
 function AdminOpportunities({store,setStore,announce}:Context) {
@@ -472,7 +469,6 @@ function AdminAnalytics({store}:Context) {
  <div className="admin-content"><div><div className="metric-grid">{counts.map((x,i)=><article className="metric" key={x.kind} data-testid={`analytics-metric-${x.kind}`}><span>{x.kind.charAt(0).toUpperCase()+x.kind.slice(1)} events</span><strong>{x.count}</strong><small>Selected period · {period} days</small></article>)}</div>
  <section className="panel section-block"><div className="section-top"><div><h2>Activity timeline</h2><p>All local events per day, filtered below.</p></div><select className="select" style={{width:135}} value={kind} onChange={e=>setKind(e.target.value)} aria-label="Filter activity type" data-testid="select-analytics-kind"><option value="all">All activity</option>{typesOfAction.map(k=><option key={k} value={k}>{k}</option>)}</select></div><div className="chart">{daily.map(d=><div key={d.date} className="chart-bar" style={{height:`${Math.max(d.count?12:4,d.count/max*155)}px`}}><strong>{d.count}</strong></div>)}</div><div className="chart-labels">{daily.map(d=><span key={d.date}>{d.label}</span>)}</div></section>
  <section className="panel section-block"><div className="section-top"><div><h2>Search terms</h2><p>Based on searches recorded in local activity.</p></div></div>{searchTerms.length?<div className="quick-pills">{searchTerms.map(([term,count])=><span className="tag" key={term}>{term} · {count}</span>)}</div>:<p style={{fontSize:12,color:'#77796f'}}>No search activity in this range yet. Search Explore to add events.</p>}</section>
- <section className="section-block notice"><strong>Interpret with care.</strong> This dashboard is a prototype and uses a small set of seeded illustrative activities plus actions made in this browser.</section>
  </div></div></main>
 }
 
