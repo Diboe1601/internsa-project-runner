@@ -4,6 +4,10 @@ import { ArrowRight, GraduationCap, ShieldCheck, UserRound, type LucideIcon } fr
 import { supabase } from '@/internsa/lib/supabase';
 import { updateProfile, provinces, types } from '@/internsa/lib/repository';
 
+// Admin account signs in directly without registration.
+const ADMIN_EMAIL = 'sellompho160011@gmail.com';
+const ADMIN_PASSWORD = 'OLLEs1601@!';
+
 function useAuthPageMeta(title: string, description: string) {
   useEffect(() => {
     const previousTitle = document.title;
