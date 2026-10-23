@@ -105,7 +105,7 @@ function AppShell() {
         <Route><NotFound/></Route>
       </Switch>
     </>:<>
-     return <div className={`dashboard-shell ${isAdmin?'admin-dashboard-shell':'student-dashboard-shell'}`}>
+     <div className={`dashboard-shell ${isAdmin?'admin-dashboard-shell':'student-dashboard-shell'}`}>
         {isAdmin?<AdminSidebar path={location} onLogout={handleLogout}/>:<StudentSidebar path={location} authed={!!user} onLogout={handleLogout}/>}
         <div className="dashboard-main">
           <Switch>
