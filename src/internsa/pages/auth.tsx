@@ -122,12 +122,12 @@ export function StudentSignupPage() {
           id: data.user.id,
           name,
           email,
-          phone: (values.get('phone') as string) || undefined,
+          phone: (values.get('phone') as string) || '',
           province: (values.get('province') as string) || 'Gauteng',
-          institution: (values.get('institution') as string) || undefined,
-          fieldOfStudy: (values.get('fieldOfStudy') as string) || undefined,
+          institution: (values.get('institution') as string) || '',
+          fieldOfStudy: (values.get('fieldOfStudy') as string) || '',
           qualification: (values.get('qualification') as string) || '',
-          graduationYear: (values.get('graduationYear') as string) || undefined,
+          graduationYear: (values.get('graduationYear') as string) || '',
           workPreference: (values.get('workPreference') as string) || 'Any',
           interests: values.getAll('interests') as string[]
         });
