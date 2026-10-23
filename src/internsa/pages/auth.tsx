@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useLocation } from '@/internsa/lib/wouter-shim';
 import { ArrowRight, GraduationCap, ShieldCheck, UserRound, type LucideIcon } from 'lucide-react';
 import { supabase } from '@/internsa/lib/supabase';
-import { updateProfile } from '@/internsa/lib/repository';
+import { updateProfile, provinces, types } from '@/internsa/lib/repository';
 
 function useAuthPageMeta(title: string, description: string) {
   useEffect(() => {
@@ -122,9 +122,14 @@ export function StudentSignupPage() {
           id: data.user.id,
           name,
           email,
-          province: 'Gauteng', // Default
-          qualification: '',
-          interests: []
+          phone: (values.get('phone') as string) || undefined,
+          province: (values.get('province') as string) || 'Gauteng',
+          institution: (values.get('institution') as string) || undefined,
+          fieldOfStudy: (values.get('fieldOfStudy') as string) || undefined,
+          qualification: (values.get('qualification') as string) || '',
+          graduationYear: (values.get('graduationYear') as string) || undefined,
+          workPreference: (values.get('workPreference') as string) || 'Any',
+          interests: values.getAll('interests') as string[]
         });
 
         setLocation('/dashboard');
@@ -149,6 +154,40 @@ export function StudentSignupPage() {
             <label htmlFor="student-signup-email">Email address</label>
             <input className="field" id="student-signup-email" name="email" type="email" autoComplete="email" placeholder="you@example.com" required data-testid="input-student-signup-email" disabled={loading} />
           </div>
+          <div className="form-field">
+            <label htmlFor="student-signup-phone">Phone number (optional)</label>
+            <input className="field" id="student-signup-phone" name="phone" type="tel" autoComplete="tel" maxLength={20} placeholder="e.g. 071 234 5678" disabled={loading} />
+          </div>
+          <div className="form-field">
+            <label htmlFor="student-signup-province">Province</label>
+            <select className="select" id="student-signup-province" name="province" defaultValue="Gauteng" disabled={loading}>{provinces.map(x => <option key={x}>{x}</option>)}</select>
+          </div>
+          <div className="form-field">
+            <label htmlFor="student-signup-institution">Institution (optional)</label>
+            <input className="field" id="student-signup-institution" name="institution" maxLength={120} placeholder="e.g. University of Pretoria" disabled={loading} />
+          </div>
+          <div className="form-field">
+            <label htmlFor="student-signup-field">Field of study (optional)</label>
+            <input className="field" id="student-signup-field" name="fieldOfStudy" maxLength={120} placeholder="e.g. Computer Science" disabled={loading} />
+          </div>
+          <div className="form-field">
+            <label htmlFor="student-signup-qualification">Qualification / study level</label>
+            <input className="field" id="student-signup-qualification" name="qualification" maxLength={120} placeholder="e.g. Final-year diploma student" disabled={loading} />
+          </div>
+          <div className="form-field">
+            <label htmlFor="student-signup-grad">Graduation year (optional)</label>
+            <input className="field" id="student-signup-grad" name="graduationYear" inputMode="numeric" pattern="[0-9]{4}" maxLength={4} placeholder="e.g. 2026" disabled={loading} />
+          </div>
+          <div className="form-field">
+            <label htmlFor="student-signup-work">Work preference</label>
+            <select className="select" id="student-signup-work" name="workPreference" defaultValue="Any" disabled={loading}>{['Any', 'On-site', 'Hybrid', 'Remote'].map(x => <option key={x}>{x}</option>)}</select>
+          </div>
+          <fieldset className="form-field" style={{ border: 0, padding: 0, margin: 0 }}>
+            <legend>Opportunity interests</legend>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px' }}>
+              {types.map(t => <label key={t} style={{ display: 'flex', gap: 6, alignItems: 'center', fontWeight: 500 }}><input type="checkbox" name="interests" value={t} disabled={loading} />{t}</label>)}
+            </div>
+          </fieldset>
           <div className="form-field">
             <label htmlFor="student-signup-password">Password</label>
             <input className="field" id="student-signup-password" name="password" type="password" autoComplete="new-password" minLength={8} placeholder="At least 8 characters" required data-testid="input-student-signup-password" disabled={loading} />
