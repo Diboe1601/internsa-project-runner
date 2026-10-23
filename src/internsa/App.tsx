@@ -113,7 +113,7 @@ function AppShell() {
             <Route path="/dashboard">{()=><StudentDashboard {...ctx}/>}</Route>
             <Route path="/applications">{()=><Applications {...ctx}/>}</Route>
             <Route path="/explore">{()=><Explore {...ctx}/>}</Route>
-            <Route path="/saved">{()=><Saved {...ctx}/>}</Route>
+            <Route path="/saved">{()=><Saved {...ctx} authed={!!user}/>}</Route>
             <Route path="/guides">{()=><Guides {...ctx}/>}</Route>
             <Route path="/profile">{()=><ProfilePage {...ctx}/>}</Route>
             <Route path="/opportunities/:id">{params=><Detail id={params.id} {...ctx}/>}</Route>
@@ -263,7 +263,8 @@ function Explore(ctx:Context) {
  </main>
 }
 
-function Saved(_ctx:Context) {
+function Saved(ctx:Context&{authed?:boolean}) {
+ if(ctx.authed){const items=ctx.store.opportunities.filter(o=>ctx.store.savedIds.includes(o.id));return <main className="content"><Heading eyebrow="Your shortlist" title="Saved opportunities" sub="Opportunities you saved to come back to later."/>{items.length?<div className="cards-grid">{items.map(item=><OpportunityCard key={item.id} item={item}/>)}</div>:<section className="panel saved-access"><Bookmark size={25} color="#a4443b"/><h2>Nothing saved yet</h2><p>Save opportunities while browsing and they will appear here.</p></section>}<div className="section-block"><Link href="/explore" className="button" data-testid="button-find-opportunities"><Search size={15}/>Browse opportunities</Link></div></main>}
  return <main className="content"><Heading eyebrow="Sign in required" title="Keep your shortlist" sub="Log in or create a student account to save opportunities and return to them later."/><section className="panel saved-access"><Bookmark size={25} color="#a4443b"/><h2>Save opportunities to your account</h2><p>Browse and read listings without an account. Saving them requires a student or job-seeker account.</p><div className="auth-required-links"><Link className="button primary" href="/login" data-testid="link-saved-login">Log in</Link><Link className="button" href="/signup" data-testid="link-saved-signup">Create a student account</Link></div></section><div className="section-block"><Link href="/explore" className="button" data-testid="button-find-opportunities"><Search size={15}/>Browse opportunities</Link></div></main>
 }
 
