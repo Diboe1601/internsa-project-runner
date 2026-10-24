@@ -299,6 +299,7 @@ function Detail({id,...ctx}:{id:string}&Context) {
         <button className="text-link" type="button" onClick={()=>ctx.toggleSave(id)} data-testid="button-detail-save"><Bookmark size={14} fill={saved?'currentColor':'none'}/>{saved?'Saved — remove':'Save for later'}</button>
       </>:<>
         {isOpen&&<Link className="button primary" href="/login" data-testid="button-record-apply"><ArrowRight size={15}/>Log in to apply</Link>}
+        {isOpen&&hasSource&&<a className="button official" href={item.sourceUrl} target="_blank" rel="noreferrer" onClick={()=>ctx.announce('Opening the official application page in a new tab.')} data-testid="button-official-apply"><ExternalLink size={15}/>Apply on the official page</a>}
         <Link className="button" href="/signup" data-testid="button-detail-signup">Create student account</Link>
         <Link className="text-link" href="/login" data-testid="button-detail-save"><Bookmark size={14}/>Log in to save</Link>
       </>}
