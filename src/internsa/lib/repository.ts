@@ -113,11 +113,11 @@ export const provinces = ['Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Nata
 export const types = ['Internship', 'Graduate programme', 'Entry-level job', 'Learnership', 'Bursary', 'Government programme', 'YES Programme', 'Other'];
 
 export const emptyOpportunity = (): Opportunity => ({
-  id: '', title: '', organisation: 'Illustrative · ', type: 'Internship', province: 'Gauteng', city: '',
+  id: '', title: '', organisation: '', type: 'Internship', province: 'Gauteng', city: '',
   locationType: 'On-site', industry: 'Other', qualification: 'Any qualification', experience: 'No experience',
   paidStatus: 'Not specified', stipend: '', closingDate: new Date().toISOString().slice(0, 10),
   description: '', requirements: '', responsibilities: '', benefits: '', howToApply: '',
-  sourceUrl: 'https://example.org/illustrative-listing', sourceStatus: 'Illustrative source · not verified',
+  sourceUrl: 'https://', sourceStatus: 'Verified source',
   status: 'draft', createdAt: new Date().toISOString(), featured: false
 });
 
