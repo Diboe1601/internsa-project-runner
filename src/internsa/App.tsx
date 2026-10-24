@@ -85,7 +85,7 @@ function AppShell() {
     setStore(current=>({...current,savedIds:saved?current.savedIds.filter(value=>value!==id):[...current.savedIds,id]}));
     track('save',{opportunityId:id});announce(saved?'Removed from saved':'Saved for later');
   };
-  const ctx={store,setStore,announce,track,toggleSave};
+  const ctx={store,setStore,announce,track,toggleSave,authed:!!user};
   const isAuthRoute=location==='/login'||location==='/signup'||location==='/admin/login';
   const isAdmin=location.startsWith('/admin')&&location!=='/admin/login';
   const handleLogout = async () => {
@@ -133,7 +133,7 @@ function AppShell() {
   </div>;
 }
 
-type Context={store:Store;setStore:Dispatch<SetStateAction<Store>>;announce:(message:string)=>void;track:(kind:Activity['kind'],extra?:Pick<Activity,'opportunityId'|'term'>)=>void;toggleSave:(id:string)=>void};
+type Context={store:Store;setStore:Dispatch<SetStateAction<Store>>;announce:(message:string)=>void;track:(kind:Activity['kind'],extra?:Pick<Activity,'opportunityId'|'term'>)=>void;toggleSave:(id:string)=>void;authed:boolean};
 function Heading({eyebrow,title,sub,action}:{eyebrow:string;title:string;sub?:string;action?:ReactNode}) {
  return <div className="page-heading"><div><p className="eyebrow">{eyebrow}</p><h1>{title}</h1>{sub&&<p>{sub}</p>}</div>{action}</div>
 }
