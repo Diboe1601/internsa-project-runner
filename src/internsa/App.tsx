@@ -269,7 +269,12 @@ function Saved(ctx:Context&{authed?:boolean}) {
 
 function Detail({id,...ctx}:{id:string}&Context) {
  const item=ctx.store.opportunities.find(o=>o.id===id);
+ const [reportOpen,setReportOpen]=useState(false);
  useEffect(()=>{if(item)ctx.track('view',{opportunityId:id})},[id]);
+ const saved=ctx.store.savedIds.includes(id);
+ const applied=ctx.store.applyIntents.some(a=>a.opportunityId===id);
+ const apply=()=>{ctx.setStore(s=>({...s,applyIntents:[...s.applyIntents,{id:makeId(),opportunityId:id,createdAt:new Date().toISOString()}]}));ctx.track('apply',{opportunityId:id});ctx.announce('Application started — it now appears in your Applications tracker.');};
+ const submitReport=(e:FormEvent<HTMLFormElement>)=>{e.preventDefault();const values=new FormData(e.currentTarget);ctx.setStore(s=>({...s,reports:[...s.reports,{id:makeId(),opportunityId:id,reason:String(values.get('reason')||'Other'),details:String(values.get('details')||''),createdAt:new Date().toISOString(),status:'open'}]}));ctx.track('report',{opportunityId:id});setReportOpen(false);ctx.announce('Report submitted. Thank you — an admin will review it.');};
  if(!item)return <main className="content"><Heading eyebrow="Opportunity" title="Listing not found"/><Link href="/explore" className="button" data-testid="link-back-explore"><ArrowLeft size={14}/>Back to Explore</Link></main>;
   const remaining=daysUntil(item.closingDate),isOpen=item.status==='published'&&remaining>=0;
  const share=async()=>{try{await navigator.clipboard.writeText(window.location.href);ctx.announce('Opportunity link copied.')}catch{ctx.announce('Copy unavailable; use your browser address bar to share.')}ctx.track('share',{opportunityId:id})};
