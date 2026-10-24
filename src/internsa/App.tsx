@@ -306,6 +306,15 @@ function Detail({id,...ctx}:{id:string}&Context) {
     {ctx.authed?<button className="button" type="button" onClick={()=>setReportOpen(true)} data-testid="button-report"><ShieldAlert size={15}/>Report this listing</button>:<Link className="button" href="/login" data-testid="button-report"><ShieldAlert size={15}/>Log in to report this listing</Link>}
    <div className="side-meta"><div><span>Closing date</span><strong>{new Date(`${item.closingDate}T00:00:00`).toLocaleDateString('en-ZA',{day:'numeric',month:'short',year:'numeric'})}</strong></div><div><span>Source status</span><strong>{item.sourceStatus}</strong></div><div><span>Local intents</span><strong>{ctx.store.applyIntents.filter(a=>a.opportunityId===id).length}</strong></div></div>
   </aside></div>
+  {reportOpen&&<Dialog title="Report this listing" close={()=>setReportOpen(false)}>
+   <form className="auth-form" onSubmit={submitReport}>
+    <div className="auth-fields">
+     <div className="form-field"><label htmlFor="report-reason">Reason</label><select className="select" id="report-reason" name="reason" data-testid="select-report-reason">{['Incorrect or misleading details','Suspicious or asks for payment','Listing is closed but still shown','Offensive or inappropriate content','Other'].map(r=><option key={r}>{r}</option>)}</select></div>
+     <div className="form-field"><label htmlFor="report-details">Details (optional)</label><textarea className="field" id="report-details" name="details" rows={4} placeholder="Tell us what is wrong with this listing" data-testid="input-report-details"/></div>
+    </div>
+    <button className="button primary auth-submit" type="submit" data-testid="button-submit-report">Submit report</button>
+   </form>
+  </Dialog>}
  </main>
 }
 function Dialog({title,children,close}:{title:string;children:ReactNode;close:()=>void}) {return <div className="dialog-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)close()}}><section className="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialog-title"><div className="dialog-head"><h2 id="dialog-title">{title}</h2><button className="dialog-close" onClick={close} aria-label="Close dialog" data-testid="button-close-dialog"><X size={16}/></button></div>{children}</section></div>}
