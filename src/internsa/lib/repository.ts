@@ -188,21 +188,24 @@ export async function fetchProfile(userId: string): Promise<Profile | null> {
     .from('profiles')
     .select('*')
     .eq('id', userId)
-    .single();
+    .maybeSingle();
 
   if (error) {
-    console.error('Error fetching profile:', error);
-    return null;
+    throw error;
   }
   return data ? (camelize(data as Record<string, unknown>) as unknown as Profile) : null;
 }
 
 export async function updateProfile(profile: Profile) {
-  const { error } = await supabase
+  if (!profile.id) throw new Error('Please log in to save your profile.');
+  const { data, error } = await supabase
     .from('profiles')
-    .upsert(snakeify(profile as unknown as Record<string, unknown>));
+    .upsert(snakeify(profile as unknown as Record<string, unknown>))
+    .select('*')
+    .single();
 
-  if (error) console.error('Error updating profile:', error);
+  if (error) throw error;
+  return camelize(data as Record<string, unknown>) as unknown as Profile;
 }
 
 export async function trackActivity(activity: Omit<Activity, 'id' | 'createdAt'>) {
