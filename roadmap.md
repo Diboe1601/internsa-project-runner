@@ -1,0 +1,3 @@
+- [x] Remove sensitive-personal/banking safety notices across the system.
+- [x] Load and save student profiles through the existing database and refresh completion from saved data.
+- [ ] Verify profile persistence and completion tests.
