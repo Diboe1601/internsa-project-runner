@@ -1,0 +1,4 @@
+- [x] Remove sensitive-personal/banking safety notices across the system.
+- [x] Load and save student profiles through the existing database and refresh completion from saved data.
+- [x] Verify profile persistence and completion tests.
+- [ ] Verify saving and realtime refresh with a live student session — external account sessions are not available in this workspace.

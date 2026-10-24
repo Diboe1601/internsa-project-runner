@@ -8,8 +8,12 @@ import {
 } from 'lucide-react';
 import {
   type Activity, type AdminProfile, defaultAdminProfile, type Guide, type GuideStatus, type Opportunity, type Profile, type Report, type Store, emptyGuide, emptyOpportunity,
-  readStore, writeStore, makeId, provinces, types, daysUntil, isLive, fetchOpportunities, fetchGuides,
+  readStore, writeStore, makeId, provinces, types, daysUntil, isLive, fetchOpportunities, fetchGuides, initialStore, updateProfile,
 } from '@/internsa/lib/repository';
+import { profileCompletion } from '@/internsa/lib/profile-completion';
+import { useStudentProfile } from '@/internsa/lib/use-student-profile';
+import { useQueryClient } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
 import NotFound from '@/internsa/pages/not-found';
 import { StudentLoginPage, StudentSignupPage } from '@/internsa/pages/auth';
 
@@ -85,7 +89,7 @@ function AppShell() {
     setStore(current=>({...current,savedIds:saved?current.savedIds.filter(value=>value!==id):[...current.savedIds,id]}));
     track('save',{opportunityId:id});announce(saved?'Removed from saved':'Saved for later');
   };
-  const ctx={store,setStore,announce,track,toggleSave,authed:!!user};
+  const ctx={store,setStore,announce,track,toggleSave,authed:!!user,userId:user?.id};
   const isAuthRoute=location==='/login'||location==='/signup'||location==='/admin/login';
   const isAdmin=location.startsWith('/admin')&&location!=='/admin/login';
   const handleLogout = async () => {
@@ -115,7 +119,7 @@ function AppShell() {
             <Route path="/explore">{()=><Explore {...ctx}/>}</Route>
             <Route path="/saved">{()=><Saved {...ctx} authed={!!user}/>}</Route>
             <Route path="/guides">{()=><Guides {...ctx}/>}</Route>
-            <Route path="/profile">{()=><ProfilePage {...ctx}/>}</Route>
+            <Route path="/profile">{()=><ProfilePage key={user?.id ?? 'visitor'} {...ctx}/>}</Route>
             <Route path="/opportunities/:id">{params=><Detail id={params.id} {...ctx}/>}</Route>
             <Route path="/admin">{()=><AdminOverview {...ctx}/>}</Route>
             <Route path="/admin/opportunities">{()=><AdminOpportunities {...ctx}/>}</Route>
@@ -133,7 +137,7 @@ function AppShell() {
   </div>;
 }
 
-type Context={store:Store;setStore:Dispatch<SetStateAction<Store>>;announce:(message:string)=>void;track:(kind:Activity['kind'],extra?:Pick<Activity,'opportunityId'|'term'>)=>void;toggleSave:(id:string)=>void;authed:boolean};
+type Context={store:Store;setStore:Dispatch<SetStateAction<Store>>;announce:(message:string)=>void;track:(kind:Activity['kind'],extra?:Pick<Activity,'opportunityId'|'term'>)=>void;toggleSave:(id:string)=>void;authed:boolean;userId?:string};
 function Heading({eyebrow,title,sub,action}:{eyebrow:string;title:string;sub?:string;action?:ReactNode}) {
  return <div className="page-heading"><div><p className="eyebrow">{eyebrow}</p><h1>{title}</h1>{sub&&<p>{sub}</p>}</div>{action}</div>
 }
@@ -321,17 +325,41 @@ function Detail({id,...ctx}:{id:string}&Context) {
 }
 function Dialog({title,children,close}:{title:string;children:ReactNode;close:()=>void}) {return <div className="dialog-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)close()}}><section className="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialog-title"><div className="dialog-head"><h2 id="dialog-title">{title}</h2><button className="dialog-close" onClick={close} aria-label="Close dialog" data-testid="button-close-dialog"><X size={16}/></button></div>{children}</section></div>}
 
-function ProfilePage({store,setStore,announce}:Context) {
- const [p,setP]=useState<Profile>(store.profile);
- const set=(k:keyof Profile)=>(e:{target:{value:string}})=>setP(v=>({...v,[k]:e.target.value}));
- const save=(e:FormEvent)=>{e.preventDefault();setStore(s=>({...s,profile:p}));announce('Profile saved on this device.');};
+function ProfilePage({setStore,announce,userId}:Context) {
+ const profileQuery=useStudentProfile(userId);
+ const queryClient=useQueryClient();
+ const [p,setP]=useState<Profile>(()=>initialStore().profile);
+ const [dirty,setDirty]=useState(false);
+ const [saving,setSaving]=useState(false);
+ const [saveError,setSaveError]=useState('');
+ useEffect(()=>{
+  if (!profileQuery.data) return;
+  setStore(s=>({...s,profile:profileQuery.data ?? initialStore().profile}));
+  if (!dirty) setP({...initialStore().profile,...profileQuery.data});
+ },[profileQuery.data,dirty,setStore]);
+ const set=(k:keyof Profile)=>(e:{target:{value:string}})=>{setDirty(true);setP(v=>({...v,[k]:e.target.value}));};
+ const save=async(e:FormEvent)=>{
+  e.preventDefault();
+  if (!userId) return;
+  setSaving(true);setSaveError('');
+  try {
+   const saved=await updateProfile({...p,id:userId});
+   queryClient.setQueryData(['student-profile',userId],saved);
+   setP({...initialStore().profile,...saved});setDirty(false);
+   setStore(s=>({...s,profile:saved}));announce('Profile saved.');
+  } catch {setSaveError('Your profile could not be saved. Please try again.');}
+  finally {setSaving(false);}
+ };
  const choices=['Internship','Bursary','Learnership','Graduate programme','Entry-level job'];
- const fields=[p.name,p.email,p.phone,p.institution,p.fieldOfStudy,p.qualification,p.goal,p.cvUrl];
- const done=Math.round(fields.filter(Boolean).length/fields.length*100);
+ const done=profileQuery.data ? profileCompletion(profileQuery.data) : 0;
  const F=({id,label,k,ph,type='text',full}:{id:string;label:string;k:keyof Profile;ph?:string;type?:string;full?:boolean})=><div className={`form-field${full?' full':''}`}><label htmlFor={id}>{label}</label><input className="field" id={id} type={type} value={(p[k] as string)||''} onChange={set(k)} placeholder={ph} data-testid={`input-${id}`}/></div>;
- return <main className="content"><Heading eyebrow="Your profile" title="Profile & career details" sub="Keep your details current so opportunities match you better. Saved only in this browser."/>
- <div className="notice" style={{marginBottom:18,maxWidth:760}}><strong>Profile {done}% complete.</strong> Add your study details, career goal and CV link to finish.</div>
+ if (!userId) return <main className="content"><Heading eyebrow="Your profile" title="Profile & career details"/><Link href="/login" className="button primary">Log in to view your profile</Link></main>;
+ if (profileQuery.isPending) return <main className="content"><Heading eyebrow="Your profile" title="Profile & career details"/><p role="status">Loading your profile…</p></main>;
+ if (profileQuery.isError) return <main className="content"><Heading eyebrow="Your profile" title="Profile & career details"/><p role="alert">Your profile could not be loaded.</p><Button onClick={()=>void profileQuery.refetch()}>Try again</Button></main>;
+ return <main className="content"><Heading eyebrow="Your profile" title="Profile & career details" sub="Keep your details current so opportunities match you better."/>
+ <div className="notice" style={{marginBottom:18,maxWidth:760}} role="status"><strong>Profile {done}% complete.</strong>{done<100?' Add your study details, career goal and CV link to finish.':' Your profile is complete.'}</div>
  <form className="panel" onSubmit={save} style={{maxWidth:760}}>
+  <fieldset disabled={saving} className="contents">
   <h3 className="profile-section">Personal details</h3><div className="form-grid">
    {F({id:'profile-name',label:'Full name',k:'name',ph:'Your name'})}{F({id:'profile-email',label:'Email address',k:'email',ph:'you@example.com',type:'email'})}
    {F({id:'profile-phone',label:'Phone number',k:'phone',ph:'e.g. 071 234 5678',type:'tel'})}
@@ -345,12 +373,13 @@ function ProfilePage({store,setStore,announce}:Context) {
    <div className="form-field full"><label htmlFor="profile-goal">Career goal</label><textarea className="field" id="profile-goal" rows={3} value={p.goal||''} onChange={set('goal')} placeholder="What kind of role are you working towards?" data-testid="input-profile-goal"/></div>
    <div className="form-field"><label htmlFor="profile-work">Work preference</label><select id="profile-work" className="select" value={p.workPreference||'Any'} onChange={set('workPreference')}>{['Any','On-site','Hybrid','Remote'].map(x=><option key={x}>{x}</option>)}</select></div>
    <div/>
-   <fieldset className="form-field full" style={{border:0,padding:0,margin:0}}><legend className="filter-label">Opportunity interests</legend><div className="quick-pills" style={{marginTop:0}}>{choices.map(c=><button type="button" key={c} className={`pill ${p.interests.includes(c)?'active':''}`} aria-pressed={p.interests.includes(c)} onClick={()=>setP(v=>({...v,interests:v.interests.includes(c)?v.interests.filter(x=>x!==c):[...v.interests,c]}))} data-testid={`toggle-interest-${c.toLowerCase().replaceAll(' ','-')}`}>{c}</button>)}</div></fieldset>
+   <fieldset className="form-field full" style={{border:0,padding:0,margin:0}}><legend className="filter-label">Opportunity interests</legend><div className="quick-pills" style={{marginTop:0}}>{choices.map(c=><Button variant="ghost" type="button" key={c} className={`pill ${p.interests.includes(c)?'active':''}`} aria-pressed={p.interests.includes(c)} onClick={()=>{setDirty(true);setP(v=>({...v,interests:v.interests.includes(c)?v.interests.filter(x=>x!==c):[...v.interests,c]}));}} data-testid={`toggle-interest-${c.toLowerCase().replaceAll(' ','-')}`}>{c}</Button>)}</div></fieldset>
   </div>
   <h3 className="profile-section">CV & links</h3><div className="form-grid">
    {F({id:'profile-cv',label:'CV link',k:'cvUrl',ph:'Link to your CV (Google Drive, etc.)',type:'url'})}{F({id:'profile-linkedin',label:'LinkedIn profile',k:'linkedinUrl',ph:'https://linkedin.com/in/...',type:'url'})}
   </div>
-  <button className="button primary" type="submit" style={{marginTop:18}} data-testid="button-save-profile"><Check size={15}/>Save profile</button></form></main>
+  <Button className="button primary mt-[18px]" type="submit" data-testid="button-save-profile"><Check size={15}/>{saving?'Saving…':'Save profile'}</Button>
+  </fieldset>{saveError&&<p role="alert">{saveError}</p>}</form></main>
 }
 function AdminProfilePage({store,setStore,announce}:Context) {
  const [p,setP]=useState<AdminProfile>(store.adminProfile??defaultAdminProfile);
@@ -391,7 +420,6 @@ function Guides({store}:Context) {
  return <main className="content">
   <Heading eyebrow="Career notes" title="A little help, right on time." sub="Short, practical reading to support your next move. Guides are verified content and are not employment or legal advice."/>
   {published.length?<div className="guide-grid">{published.map((guide,index)=><article className="guide-card" key={guide.id} data-testid={`card-guide-${guide.id}`}><span className="guide-index">{String(index+1).padStart(2,'0')}</span><p className="small-label">{guide.category} · {guide.read}</p><h3>{guide.title}</h3><p>{guide.copy}</p><details><summary className="text-link" style={{cursor:'pointer'}} data-testid={`button-open-guide-${guide.id}`}>Read the practical checklist <ChevronDown size={13}/></summary>{guide.checklist.length?<ul style={{fontSize:11,color:'#65675f',lineHeight:1.8,paddingLeft:18,marginTop:10}}>{guide.checklist.map((step,stepIndex)=><li key={`${guide.id}-${stepIndex}`}>{step}</li>)}</ul>:<p style={{fontSize:11,color:'#65675f'}}>Checklist coming soon.</p>}</details></article>)}</div>:<div className="panel" style={{padding:28,textAlign:'center',color:'#77796f',fontSize:12}}>No guides are published yet.</div>}
-  <div className="notice warning" style={{marginTop:20}}><strong>Keep your information safe.</strong> Share sensitive personal or banking information only with verified sources.</div>
  </main>
 }
 
