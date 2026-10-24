@@ -291,14 +291,19 @@ function Detail({id,...ctx}:{id:string}&Context) {
    <section className="detail-section"><h2>How to apply</h2><p>{item.howToApply}</p></section>
    <section className="detail-section"><h2>Source details</h2><p>{item.sourceStatus}. The displayed URL is the verified employer application portal.</p><a className="text-link" href={item.sourceUrl} target="_blank" rel="noreferrer" onClick={e=>{e.preventDefault();ctx.announce('Verified source details.')}} data-testid="link-source-details">Verified source reference <ExternalLink size={13}/></a></section>
    <div className="notice warning" style={{marginTop:20}}><strong>Apply safely.</strong> InternSA never charges application fees. All listings are verified; applications go through each organisation's official portal.</div>
-   </article><aside className="side-card"><span className="small-label">Your next step</span><h3>{isOpen?'Sign in to apply':'This listing is not open'}</h3><p style={{fontSize:11,color:'#77796f',lineHeight:1.6}}>{isOpen?'You can read the full listing without an account. Log in or create a student account before applying or saving it.':'This listing is closed or unavailable. You can still create an account to save other opportunities.'}</p>
+   </article><aside className="side-card"><span className="small-label">Your next step</span><h3>{ctx.authed?(isOpen?'Ready to apply?':'This listing is not open'):(isOpen?'Sign in to apply':'This listing is not open')}</h3><p style={{fontSize:11,color:'#77796f',lineHeight:1.6}}>{ctx.authed?(isOpen?'Start your application through the organisation’s official portal, or save this listing to come back to it.':'This listing is closed or unavailable. You can still save other opportunities.'):(isOpen?'You can read the full listing without an account. Log in or create a student account before applying or saving it.':'This listing is closed or unavailable. You can still create an account to save other opportunities.')}</p>
     <div className="auth-required-links detail-auth-links">
-      {isOpen&&<Link className="button primary" href="/login" data-testid="button-record-apply"><ArrowRight size={15}/>Log in to apply</Link>}
-      <Link className="button" href="/signup" data-testid="button-detail-signup">Create student account</Link>
-      <Link className="text-link" href="/login" data-testid="button-detail-save"><Bookmark size={14}/>Log in to save</Link>
+      {ctx.authed?<>
+        {isOpen&&<button className="button primary" type="button" onClick={apply} disabled={applied} data-testid="button-record-apply"><ArrowRight size={15}/>{applied?'Application started':'Start application'}</button>}
+        <button className="text-link" type="button" onClick={()=>ctx.toggleSave(id)} data-testid="button-detail-save"><Bookmark size={14} fill={saved?'currentColor':'none'}/>{saved?'Saved — remove':'Save for later'}</button>
+      </>:<>
+        {isOpen&&<Link className="button primary" href="/login" data-testid="button-record-apply"><ArrowRight size={15}/>Log in to apply</Link>}
+        <Link className="button" href="/signup" data-testid="button-detail-signup">Create student account</Link>
+        <Link className="text-link" href="/login" data-testid="button-detail-save"><Bookmark size={14}/>Log in to save</Link>
+      </>}
     </div>
    <button className="button" type="button" onClick={share} data-testid="button-share"><Share2 size={15}/>Share / copy link</button>
-    <Link className="button" href="/login" data-testid="button-report"><ShieldAlert size={15}/>Log in to report this listing</Link>
+    {ctx.authed?<button className="button" type="button" onClick={()=>setReportOpen(true)} data-testid="button-report"><ShieldAlert size={15}/>Report this listing</button>:<Link className="button" href="/login" data-testid="button-report"><ShieldAlert size={15}/>Log in to report this listing</Link>}
    <div className="side-meta"><div><span>Closing date</span><strong>{new Date(`${item.closingDate}T00:00:00`).toLocaleDateString('en-ZA',{day:'numeric',month:'short',year:'numeric'})}</strong></div><div><span>Source status</span><strong>{item.sourceStatus}</strong></div><div><span>Local intents</span><strong>{ctx.store.applyIntents.filter(a=>a.opportunityId===id).length}</strong></div></div>
   </aside></div>
  </main>
