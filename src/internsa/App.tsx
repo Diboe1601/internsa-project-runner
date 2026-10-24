@@ -85,7 +85,7 @@ function AppShell() {
     setStore(current=>({...current,savedIds:saved?current.savedIds.filter(value=>value!==id):[...current.savedIds,id]}));
     track('save',{opportunityId:id});announce(saved?'Removed from saved':'Saved for later');
   };
-  const ctx={store,setStore,announce,track,toggleSave};
+  const ctx={store,setStore,announce,track,toggleSave,authed:!!user};
   const isAuthRoute=location==='/login'||location==='/signup'||location==='/admin/login';
   const isAdmin=location.startsWith('/admin')&&location!=='/admin/login';
   const handleLogout = async () => {
@@ -133,7 +133,7 @@ function AppShell() {
   </div>;
 }
 
-type Context={store:Store;setStore:Dispatch<SetStateAction<Store>>;announce:(message:string)=>void;track:(kind:Activity['kind'],extra?:Pick<Activity,'opportunityId'|'term'>)=>void;toggleSave:(id:string)=>void};
+type Context={store:Store;setStore:Dispatch<SetStateAction<Store>>;announce:(message:string)=>void;track:(kind:Activity['kind'],extra?:Pick<Activity,'opportunityId'|'term'>)=>void;toggleSave:(id:string)=>void;authed:boolean};
 function Heading({eyebrow,title,sub,action}:{eyebrow:string;title:string;sub?:string;action?:ReactNode}) {
  return <div className="page-heading"><div><p className="eyebrow">{eyebrow}</p><h1>{title}</h1>{sub&&<p>{sub}</p>}</div>{action}</div>
 }
@@ -183,17 +183,18 @@ function AdminNav({path}:{path:string}) {
   <button type="button" onClick={()=>setLocation('/login')} data-testid="button-admin-mobile-logout"><LogOut size={17}/><span>Log out</span></button>
  </nav>
 }
-function OpportunityCard({item}:{item:Opportunity}) {
+function OpportunityCard({item,ctx}:{item:Opportunity;ctx:Context}) {
  const remaining=daysUntil(item.closingDate);
+ const saved=ctx.store.savedIds.includes(item.id);
  return <article className="op-card" data-testid={`card-opportunity-${item.id}`}>
-   <div className="card-top"><span className="org-mark">{item.organisation.split(/[· ]/).filter(Boolean).slice(-2).map(w=>w[0]).join('').slice(0,2).toUpperCase()}</span><div className="card-title"><p className="org-name" data-testid={`text-organisation-${item.id}`}>{item.organisation}</p><h3><Link href={`/opportunities/${item.id}`} className="text-link" data-testid={`link-opportunity-${item.id}`} style={{fontSize:'inherit',padding:0,color:'inherit',textAlign:'left'}}>{item.title}</Link></h3></div><Link className="save-icon" href="/login" aria-label={`Log in to save ${item.title}`} title="Log in to save" data-testid={`button-save-${item.id}`}><Bookmark size={18}/></Link></div>
+   <div className="card-top"><span className="org-mark">{item.organisation.split(/[· ]/).filter(Boolean).slice(-2).map(w=>w[0]).join('').slice(0,2).toUpperCase()}</span><div className="card-title"><p className="org-name" data-testid={`text-organisation-${item.id}`}>{item.organisation}</p><h3><Link href={`/opportunities/${item.id}`} className="text-link" data-testid={`link-opportunity-${item.id}`} style={{fontSize:'inherit',padding:0,color:'inherit',textAlign:'left'}}>{item.title}</Link></h3></div>{ctx.authed?<button type="button" className="save-icon" onClick={()=>ctx.toggleSave(item.id)} aria-label={saved?`Remove ${item.title} from saved`:`Save ${item.title}`} title={saved?'Remove from saved':'Save for later'} data-testid={`button-save-${item.id}`}><Bookmark size={18} fill={saved?'currentColor':'none'}/></button>:<Link className="save-icon" href="/login" aria-label={`Log in to save ${item.title}`} title="Log in to save" data-testid={`button-save-${item.id}`}><Bookmark size={18}/></Link>}</div>
    <div className="card-tags"><span className="tag">{item.type}</span><span className="tag"><MapPin size={11}/>{item.city||item.province}</span><span className="tag">{item.qualification}</span>{item.paidStatus!=='Not specified'&&<span className="tag">{item.paidStatus}</span>}</div>
-   <div className="post-auth-cta"><span>{item.status==='published'&&remaining>=0?'Want to apply?':'Want to save this?'}</span><div><Link href="/login" data-testid={`link-login-${item.id}`}>Log in</Link><span aria-hidden="true">·</span><Link href="/signup" data-testid={`link-signup-${item.id}`}>Sign up</Link></div></div>
+   {!ctx.authed&&<div className="post-auth-cta"><span>{item.status==='published'&&remaining>=0?'Want to apply?':'Want to save this?'}</span><div><Link href="/login" data-testid={`link-login-${item.id}`}>Log in</Link><span aria-hidden="true">·</span><Link href="/signup" data-testid={`link-signup-${item.id}`}>Sign up</Link></div></div>}
    <div className="card-bottom"><div><span className="trust-line"><ShieldAlert size={12}/>{item.sourceStatus}</span><div className="card-deadline" data-testid={`text-deadline-${item.id}`}>{item.status==='closed'||remaining<0?'Closed':remaining===0?'Closes today':`Closes in ${remaining} day${remaining===1?'':'s'}`}</div></div><Link href={`/opportunities/${item.id}`} className="button primary small" data-testid={`button-view-${item.id}`}>View details <ArrowRight size={13}/></Link></div>
  </article>
 }
-function OpportunityGrid({items,empty='No opportunities match these choices yet.'}:{items:Opportunity[];empty?:string}) {
- return items.length?<div className="cards-grid">{items.map(item=><OpportunityCard key={item.id} item={item}/>)}</div>:<div className="panel" style={{textAlign:'center',padding:34}}><Search size={24} color="#a4443b"/><h3 style={{fontFamily:'Newsreader',margin:'10px 0 4px'}}>Nothing in this view just yet</h3><p style={{color:'#77796f',fontSize:12,margin:0}}>{empty}</p></div>
+function OpportunityGrid({items,ctx,empty='No opportunities match these choices yet.'}:{items:Opportunity[];ctx:Context;empty?:string}) {
+ return items.length?<div className="cards-grid">{items.map(item=><OpportunityCard key={item.id} item={item} ctx={ctx}/>)}</div>:<div className="panel" style={{textAlign:'center',padding:34}}><Search size={24} color="#a4443b"/><h3 style={{fontFamily:'Newsreader',margin:'10px 0 4px'}}>Nothing in this view just yet</h3><p style={{color:'#77796f',fontSize:12,margin:0}}>{empty}</p></div>
 }
 function Home(ctx:Context) {
  const [,setLocation]=useLocation();
@@ -207,8 +208,8 @@ function Home(ctx:Context) {
    <form className="hero-search" onSubmit={submit}><input className="field" aria-label="Search opportunities" placeholder="Search role, field or province" value={search} onChange={e=>setSearch(e.target.value)} data-testid="input-home-search"/><button className="button primary" type="submit" data-testid="button-home-search"><Search size={15}/>Search opportunities</button></form>
    <div className="quick-pills" aria-label="Popular searches">{['Internship','Bursary','Learnership','Graduate programme'].map(t=><button key={t} className="pill" onClick={()=>{ctx.track('search',{term:t});setLocation('/explore?q='+encodeURIComponent(t))}} data-testid={`quick-search-${t.toLowerCase().replaceAll(' ','-')}`}>{t}</button>)}</div>
   </div><aside className="hero-aside"><span className="small-label">First, find your fit</span><strong>Search → Discover → Understand → Apply</strong><p>Compare the basics, check the source context, and take your next step with your eyes open.</p></aside></section>
-  <section className="section-block"><div className="section-top"><div><h2>Closing soon</h2><p>Deadlines for these verified listings are kept current.</p></div><Link href="/explore" className="text-link" data-testid="link-closing-explore">Explore all <ArrowRight size={13}/></Link></div><OpportunityGrid items={closing} empty="No currently published listings." /></section>
-  <section className="section-block"><div className="section-top"><div><h2>Recently added</h2><p>Verified listings · source details are confirmed.</p></div><Link href="/explore" className="text-link" data-testid="link-latest-explore">See all <ArrowRight size={13}/></Link></div><OpportunityGrid items={latest}/></section>
+  <section className="section-block"><div className="section-top"><div><h2>Closing soon</h2><p>Deadlines for these verified listings are kept current.</p></div><Link href="/explore" className="text-link" data-testid="link-closing-explore">Explore all <ArrowRight size={13}/></Link></div><OpportunityGrid items={closing} ctx={ctx} empty="No currently published listings." /></section>
+  <section className="section-block"><div className="section-top"><div><h2>Recently added</h2><p>Verified listings · source details are confirmed.</p></div><Link href="/explore" className="text-link" data-testid="link-latest-explore">See all <ArrowRight size={13}/></Link></div><OpportunityGrid items={latest} ctx={ctx}/></section>
   <section className="section-block"><div className="section-top"><div><h2>Browse by province</h2><p>Start with a place that works for you.</p></div></div><div className="quick-pills">{provinces.map(p=><Link key={p} href={`/explore?province=${encodeURIComponent(p)}`} className="pill" data-testid={`province-${p.toLowerCase().replaceAll(' ','-')}`}>{p}</Link>)}</div></section>
    <section className="section-block"><div className="section-top"><div><h2>Small guides for the next step</h2><p>Practical preparation, without the jargon.</p></div><Link href="/guides" className="text-link" data-testid="link-guides">All guides <ArrowRight size={13}/></Link></div><div className="guide-grid">{publishedGuides.map((guide,i)=><article className="guide-card" key={guide.id}><span className="guide-index">{String(i+1).padStart(2,'0')}</span><p className="small-label">{guide.category} · {guide.read}</p><h3>{guide.title}</h3><p>{guide.copy}</p><Link href="/guides" className="text-link" data-testid={`guide-preview-${i}`}>Read guide <ArrowRight size={13}/></Link></article>)}</div></section>
  </main>
@@ -234,7 +235,7 @@ function StudentDashboard(ctx:Context) {
    <form className="sd-search" onSubmit={submit}><Search size={16}/><input aria-label="Search opportunities" placeholder="Search opportunities..." value={search} onChange={e=>setSearch(e.target.value)} data-testid="input-dashboard-search"/><button className="button primary small" type="submit" aria-label="Search" data-testid="button-dashboard-search"><ArrowRight size={15}/></button></form>
   </section>
   <section className="sd-stats">{stats.map(({label,value,href,cta,icon:Icon,dark})=><article key={label} className={`sd-stat${dark?' dark':''}`} data-testid={`stat-${label.toLowerCase().replaceAll(' ','-')}`}><span className="sd-stat-icon"><Icon size={17}/></span><p>{label}</p><strong>{value}</strong><Link href={href} className="text-link">{cta} <ArrowRight size={13}/></Link></article>)}</section>
-  <section className="section-block"><div className="section-top"><div><h2>Closing soon</h2><p>Don't miss these deadlines.</p></div><Link href="/explore" className="text-link">View all <ArrowRight size={13}/></Link></div><OpportunityGrid items={closing} empty="No currently published listings."/></section>
+  <section className="section-block"><div className="section-top"><div><h2>Closing soon</h2><p>Don't miss these deadlines.</p></div><Link href="/explore" className="text-link">View all <ArrowRight size={13}/></Link></div><OpportunityGrid items={closing} ctx={ctx} empty="No currently published listings."/></section>
   <section className="section-block"><div className="section-top"><div><h2>Career guides</h2><p>Prepare for your next step.</p></div><Link href="/guides" className="text-link">All guides <ArrowRight size={13}/></Link></div><div className="quick-pills">{guides.slice(0,4).map(g=><Link key={g.id} href="/guides" className="pill"><BookOpen size={13}/> {g.title}</Link>)}</div></section>
  </main>
 }
@@ -257,18 +258,23 @@ function Explore(ctx:Context) {
    <div><label className="filter-label" htmlFor="filter-paid">Compensation</label><select id="filter-paid" className="select" value={paid} onChange={e=>setPaid(e.target.value)} data-testid="select-filter-paid"><option value="">Any</option>{['Paid','Stipend','Unpaid','Not specified'].map(v=><option key={v}>{v}</option>)}</select></div>
   </div>
   <div className="results-head"><strong data-testid="text-result-count">{filtered.length} {filtered.length===1?'opportunity':'opportunities'}</strong><label style={{display:'flex',alignItems:'center',gap:7,fontSize:10}}>Sort <select className="select" style={{width:150}} value={sort} onChange={e=>setSort(e.target.value)} aria-label="Sort results" data-testid="select-sort"><option value="newest">Newest</option><option value="closing">Closing soon</option><option value="relevant">Featured first</option></select></label></div>
-  <OpportunityGrid items={filtered} empty="Try removing a filter or searching a broader term."/>
+  <OpportunityGrid items={filtered} ctx={ctx} empty="Try removing a filter or searching a broader term."/>
  </main>
 }
 
 function Saved(ctx:Context&{authed?:boolean}) {
- if(ctx.authed){const items=ctx.store.opportunities.filter(o=>ctx.store.savedIds.includes(o.id));return <main className="content"><Heading eyebrow="Your shortlist" title="Saved opportunities" sub="Opportunities you saved to come back to later."/>{items.length?<div className="cards-grid">{items.map(item=><OpportunityCard key={item.id} item={item}/>)}</div>:<section className="panel saved-access"><Bookmark size={25} color="#a4443b"/><h2>Nothing saved yet</h2><p>Save opportunities while browsing and they will appear here.</p></section>}<div className="section-block"><Link href="/explore" className="button" data-testid="button-find-opportunities"><Search size={15}/>Browse opportunities</Link></div></main>}
+ if(ctx.authed){const items=ctx.store.opportunities.filter(o=>ctx.store.savedIds.includes(o.id));return <main className="content"><Heading eyebrow="Your shortlist" title="Saved opportunities" sub="Opportunities you saved to come back to later."/>{items.length?<div className="cards-grid">{items.map(item=><OpportunityCard key={item.id} item={item} ctx={ctx}/>)}</div>:<section className="panel saved-access"><Bookmark size={25} color="#a4443b"/><h2>Nothing saved yet</h2><p>Save opportunities while browsing and they will appear here.</p></section>}<div className="section-block"><Link href="/explore" className="button" data-testid="button-find-opportunities"><Search size={15}/>Browse opportunities</Link></div></main>}
  return <main className="content"><Heading eyebrow="Sign in required" title="Keep your shortlist" sub="Log in or create a student account to save opportunities and return to them later."/><section className="panel saved-access"><Bookmark size={25} color="#a4443b"/><h2>Save opportunities to your account</h2><p>Browse and read listings without an account. Saving them requires a student or job-seeker account.</p><div className="auth-required-links"><Link className="button primary" href="/login" data-testid="link-saved-login">Log in</Link><Link className="button" href="/signup" data-testid="link-saved-signup">Create a student account</Link></div></section><div className="section-block"><Link href="/explore" className="button" data-testid="button-find-opportunities"><Search size={15}/>Browse opportunities</Link></div></main>
 }
 
 function Detail({id,...ctx}:{id:string}&Context) {
  const item=ctx.store.opportunities.find(o=>o.id===id);
+ const [reportOpen,setReportOpen]=useState(false);
  useEffect(()=>{if(item)ctx.track('view',{opportunityId:id})},[id]);
+ const saved=ctx.store.savedIds.includes(id);
+ const applied=ctx.store.applyIntents.some(a=>a.opportunityId===id);
+ const apply=()=>{ctx.setStore(s=>({...s,applyIntents:[...s.applyIntents,{id:makeId(),opportunityId:id,createdAt:new Date().toISOString()}]}));ctx.track('apply',{opportunityId:id});ctx.announce('Application started — it now appears in your Applications tracker.');};
+ const submitReport=(e:FormEvent<HTMLFormElement>)=>{e.preventDefault();const values=new FormData(e.currentTarget);ctx.setStore(s=>({...s,reports:[...s.reports,{id:makeId(),opportunityId:id,reason:String(values.get('reason')||'Other'),details:String(values.get('details')||''),createdAt:new Date().toISOString(),status:'open'}]}));ctx.track('report',{opportunityId:id});setReportOpen(false);ctx.announce('Report submitted. Thank you — an admin will review it.');};
  if(!item)return <main className="content"><Heading eyebrow="Opportunity" title="Listing not found"/><Link href="/explore" className="button" data-testid="link-back-explore"><ArrowLeft size={14}/>Back to Explore</Link></main>;
   const remaining=daysUntil(item.closingDate),isOpen=item.status==='published'&&remaining>=0;
  const share=async()=>{try{await navigator.clipboard.writeText(window.location.href);ctx.announce('Opportunity link copied.')}catch{ctx.announce('Copy unavailable; use your browser address bar to share.')}ctx.track('share',{opportunityId:id})};
@@ -285,16 +291,30 @@ function Detail({id,...ctx}:{id:string}&Context) {
    <section className="detail-section"><h2>How to apply</h2><p>{item.howToApply}</p></section>
    <section className="detail-section"><h2>Source details</h2><p>{item.sourceStatus}. The displayed URL is the verified employer application portal.</p><a className="text-link" href={item.sourceUrl} target="_blank" rel="noreferrer" onClick={e=>{e.preventDefault();ctx.announce('Verified source details.')}} data-testid="link-source-details">Verified source reference <ExternalLink size={13}/></a></section>
    <div className="notice warning" style={{marginTop:20}}><strong>Apply safely.</strong> InternSA never charges application fees. All listings are verified; applications go through each organisation's official portal.</div>
-   </article><aside className="side-card"><span className="small-label">Your next step</span><h3>{isOpen?'Sign in to apply':'This listing is not open'}</h3><p style={{fontSize:11,color:'#77796f',lineHeight:1.6}}>{isOpen?'You can read the full listing without an account. Log in or create a student account before applying or saving it.':'This listing is closed or unavailable. You can still create an account to save other opportunities.'}</p>
+   </article><aside className="side-card"><span className="small-label">Your next step</span><h3>{ctx.authed?(isOpen?'Ready to apply?':'This listing is not open'):(isOpen?'Sign in to apply':'This listing is not open')}</h3><p style={{fontSize:11,color:'#77796f',lineHeight:1.6}}>{ctx.authed?(isOpen?'Start your application through the organisation’s official portal, or save this listing to come back to it.':'This listing is closed or unavailable. You can still save other opportunities.'):(isOpen?'You can read the full listing without an account. Log in or create a student account before applying or saving it.':'This listing is closed or unavailable. You can still create an account to save other opportunities.')}</p>
     <div className="auth-required-links detail-auth-links">
-      {isOpen&&<Link className="button primary" href="/login" data-testid="button-record-apply"><ArrowRight size={15}/>Log in to apply</Link>}
-      <Link className="button" href="/signup" data-testid="button-detail-signup">Create student account</Link>
-      <Link className="text-link" href="/login" data-testid="button-detail-save"><Bookmark size={14}/>Log in to save</Link>
+      {ctx.authed?<>
+        {isOpen&&<button className="button primary" type="button" onClick={apply} disabled={applied} data-testid="button-record-apply"><ArrowRight size={15}/>{applied?'Application started':'Start application'}</button>}
+        <button className="text-link" type="button" onClick={()=>ctx.toggleSave(id)} data-testid="button-detail-save"><Bookmark size={14} fill={saved?'currentColor':'none'}/>{saved?'Saved — remove':'Save for later'}</button>
+      </>:<>
+        {isOpen&&<Link className="button primary" href="/login" data-testid="button-record-apply"><ArrowRight size={15}/>Log in to apply</Link>}
+        <Link className="button" href="/signup" data-testid="button-detail-signup">Create student account</Link>
+        <Link className="text-link" href="/login" data-testid="button-detail-save"><Bookmark size={14}/>Log in to save</Link>
+      </>}
     </div>
    <button className="button" type="button" onClick={share} data-testid="button-share"><Share2 size={15}/>Share / copy link</button>
-    <Link className="button" href="/login" data-testid="button-report"><ShieldAlert size={15}/>Log in to report this listing</Link>
+    {ctx.authed?<button className="button" type="button" onClick={()=>setReportOpen(true)} data-testid="button-report"><ShieldAlert size={15}/>Report this listing</button>:<Link className="button" href="/login" data-testid="button-report"><ShieldAlert size={15}/>Log in to report this listing</Link>}
    <div className="side-meta"><div><span>Closing date</span><strong>{new Date(`${item.closingDate}T00:00:00`).toLocaleDateString('en-ZA',{day:'numeric',month:'short',year:'numeric'})}</strong></div><div><span>Source status</span><strong>{item.sourceStatus}</strong></div><div><span>Local intents</span><strong>{ctx.store.applyIntents.filter(a=>a.opportunityId===id).length}</strong></div></div>
   </aside></div>
+  {reportOpen&&<Dialog title="Report this listing" close={()=>setReportOpen(false)}>
+   <form className="auth-form" onSubmit={submitReport}>
+    <div className="auth-fields">
+     <div className="form-field"><label htmlFor="report-reason">Reason</label><select className="select" id="report-reason" name="reason" data-testid="select-report-reason">{['Incorrect or misleading details','Suspicious or asks for payment','Listing is closed but still shown','Offensive or inappropriate content','Other'].map(r=><option key={r}>{r}</option>)}</select></div>
+     <div className="form-field"><label htmlFor="report-details">Details (optional)</label><textarea className="field" id="report-details" name="details" rows={4} placeholder="Tell us what is wrong with this listing" data-testid="input-report-details"/></div>
+    </div>
+    <button className="button primary auth-submit" type="submit" data-testid="button-submit-report">Submit report</button>
+   </form>
+  </Dialog>}
  </main>
 }
 function Dialog({title,children,close}:{title:string;children:ReactNode;close:()=>void}) {return <div className="dialog-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)close()}}><section className="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialog-title"><div className="dialog-head"><h2 id="dialog-title">{title}</h2><button className="dialog-close" onClick={close} aria-label="Close dialog" data-testid="button-close-dialog"><X size={16}/></button></div>{children}</section></div>}
