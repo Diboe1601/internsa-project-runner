@@ -295,6 +295,7 @@ function Detail({id,...ctx}:{id:string}&Context) {
     <div className="auth-required-links detail-auth-links">
       {ctx.authed?<>
         {isOpen&&<button className="button primary" type="button" onClick={apply} disabled={applied} data-testid="button-record-apply"><ArrowRight size={15}/>{applied?'Application started':'Start application'}</button>}
+        {isOpen&&hasSource&&<a className="button official" href={item.sourceUrl} target="_blank" rel="noreferrer" onClick={()=>ctx.announce('Opening the official application page in a new tab.')} data-testid="button-official-apply"><ExternalLink size={15}/>Apply on the official page</a>}
         <button className="text-link" type="button" onClick={()=>ctx.toggleSave(id)} data-testid="button-detail-save"><Bookmark size={14} fill={saved?'currentColor':'none'}/>{saved?'Saved — remove':'Save for later'}</button>
       </>:<>
         {isOpen&&<Link className="button primary" href="/login" data-testid="button-record-apply"><ArrowRight size={15}/>Log in to apply</Link>}
