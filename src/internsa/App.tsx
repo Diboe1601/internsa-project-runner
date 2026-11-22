@@ -131,7 +131,7 @@ function AppShell() {
           </Switch>
         </div>
       </div>
-      {isAdmin?<AdminNav path={location}/>:<BottomNav path={location} authed={!!user}/>}
+      {isAdmin?<AdminNav path={location} onLogout={handleLogout}/>:<BottomNav path={location} authed={!!user} onLogout={handleLogout}/>}
     </>}
     {toast&&<div className="toast" role="status" data-testid="status-toast">{toast}</div>}
   </div>;
@@ -170,7 +170,7 @@ function AdminSidebar({path, onLogout}:{path:string; onLogout: () => void}) {
   </div>
  </aside>
 }
-function BottomNav({path, authed}:{path:string; authed:boolean}) {
+function BottomNav({path, authed, onLogout}:{path:string; authed:boolean; onLogout:()=>void}) {
  const links=linksFor(path,authed);
  return <nav className="bottom-nav" aria-label="Student dashboard navigation">
   {links.map(({href,label,icon:Icon})=><Link key={href} href={href} className={path===href?'active':''} data-testid={`mobile-nav-${label.toLowerCase()}`}><Icon size={17}/><span>{label}</span></Link>)}
@@ -178,13 +178,13 @@ function BottomNav({path, authed}:{path:string; authed:boolean}) {
    <Link href="/login" data-testid="mobile-nav-login"><ArrowLeft size={17}/><span>Log in</span></Link>
    <Link href="/signup" data-testid="mobile-nav-signup"><Plus size={17}/><span>Sign up</span></Link>
   </>}
+  {authed&&<button type="button" onClick={onLogout} data-testid="button-student-mobile-logout"><LogOut size={17}/><span>Log out</span></button>}
  </nav>
 }
-function AdminNav({path}:{path:string}) {
- const [,setLocation]=useLocation();
+function AdminNav({path,onLogout}:{path:string;onLogout:()=>void}) {
  return <nav className="bottom-nav" aria-label="Admin dashboard navigation">
   {adminLinks.map(({href,label,icon:Icon})=><Link key={href} href={href} className={path===href?'active':''} data-testid={`mobile-admin-${label.toLowerCase()}`}><Icon size={17}/><span>{label}</span></Link>)}
-  <button type="button" onClick={()=>setLocation('/login')} data-testid="button-admin-mobile-logout"><LogOut size={17}/><span>Log out</span></button>
+  <button type="button" onClick={onLogout} data-testid="button-admin-mobile-logout"><LogOut size={17}/><span>Log out</span></button>
  </nav>
 }
 function OpportunityCard({item,ctx}:{item:Opportunity;ctx:Context}) {
