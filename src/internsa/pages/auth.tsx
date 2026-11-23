@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useLocation } from '@/internsa/lib/wouter-shim';
-import { ArrowRight, GraduationCap, ShieldCheck, UserRound, type LucideIcon } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff, GraduationCap, ShieldCheck, UserRound, type LucideIcon } from 'lucide-react';
 import { supabase } from '@/internsa/lib/supabase';
 import { updateProfile, provinces, types } from '@/internsa/lib/repository';
 
@@ -215,6 +215,7 @@ export function StudentLoginPage() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [, setLocation] = useLocation();
   const description = 'Students, job seekers, and administrators use this same login page.';
 
@@ -266,7 +267,12 @@ export function StudentLoginPage() {
           </div>
           <div className="form-field">
             <label htmlFor="student-login-password">Password</label>
-            <input className="field" id="student-login-password" name="password" type="password" autoComplete="current-password" placeholder="Your password" required data-testid="input-student-login-password" disabled={loading} />
+            <div className="password-field">
+              <input className="field" id="student-login-password" name="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" placeholder="Your password" required data-testid="input-student-login-password" disabled={loading} />
+              <button className="password-toggle" type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword} title={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword(value => !value)} disabled={loading} data-testid="button-toggle-login-password">
+                {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+              </button>
+            </div>
           </div>
         </div>
         <button className="button primary auth-submit" type="submit" data-testid="button-student-login" disabled={loading}>
