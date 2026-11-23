@@ -87,6 +87,8 @@ export function StudentSignupPage() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [, setLocation] = useLocation();
   const description = 'Create a student or job-seeker account to support your early-career search.';
 
@@ -194,11 +196,21 @@ export function StudentSignupPage() {
           </fieldset>
           <div className="form-field">
             <label htmlFor="student-signup-password">Password</label>
-            <input className="field" id="student-signup-password" name="password" type="password" autoComplete="new-password" minLength={8} placeholder="At least 8 characters" required data-testid="input-student-signup-password" disabled={loading} />
+            <div className="password-field">
+              <input className="field" id="student-signup-password" name="password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={8} placeholder="At least 8 characters" required data-testid="input-student-signup-password" disabled={loading} />
+              <button className="password-toggle" type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword} title={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword(value => !value)} disabled={loading} data-testid="button-toggle-signup-password">
+                {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+              </button>
+            </div>
           </div>
           <div className="form-field">
             <label htmlFor="student-signup-confirm">Confirm password</label>
-            <input className="field" id="student-signup-confirm" name="confirmPassword" type="password" autoComplete="new-password" minLength={8} placeholder="Enter your password again" required data-testid="input-student-signup-confirm" disabled={loading} />
+            <div className="password-field">
+              <input className="field" id="student-signup-confirm" name="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} autoComplete="new-password" minLength={8} placeholder="Enter your password again" required data-testid="input-student-signup-confirm" disabled={loading} />
+              <button className="password-toggle" type="button" aria-label={showConfirmPassword ? 'Hide password' : 'Show password'} aria-pressed={showConfirmPassword} title={showConfirmPassword ? 'Hide password' : 'Show password'} onClick={() => setShowConfirmPassword(value => !value)} disabled={loading} data-testid="button-toggle-signup-confirm-password">
+                {showConfirmPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+              </button>
+            </div>
           </div>
         </div>
         <button className="button primary auth-submit" type="submit" data-testid="button-student-signup" disabled={loading}>
