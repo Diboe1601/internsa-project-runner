@@ -1,4 +1,5 @@
 - [x] Align mobile navigation and logout controls across admin and student/graduate dashboards.
+- [x] Move mobile profile links to a sticky top-right shortcut and balance the remaining dashboard navigation items.
 - [x] Remove sensitive-personal/banking safety notices across the system.
 - [x] Load and save student profiles through the existing database and refresh completion from saved data.
 - [x] Verify profile persistence and completion tests.

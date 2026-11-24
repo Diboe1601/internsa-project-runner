@@ -109,6 +109,7 @@ function AppShell() {
         <Route><NotFound/></Route>
       </Switch>
     </>:<>
+     {(isAdmin||!!user||!publicPaths.includes(location))&&<MobileProfileShortcut href={isAdmin?'/admin/profile':'/profile'}/>}
      <div className={`dashboard-shell ${isAdmin?'admin-dashboard-shell':'student-dashboard-shell'}`}>
         {isAdmin?<AdminSidebar path={location} onLogout={handleLogout}/>:<StudentSidebar path={location} authed={!!user} onLogout={handleLogout}/>}
         <div className="dashboard-main">
@@ -170,10 +171,15 @@ function AdminSidebar({path, onLogout}:{path:string; onLogout: () => void}) {
   </div>
  </aside>
 }
+function MobileProfileShortcut({href}:{href:string}) {
+ return <div className="mobile-profile-bar"><Link href={href} className="mobile-profile-link" data-testid="mobile-profile-shortcut"><UserRound size={16}/><span>Profile</span></Link></div>
+}
 function BottomNav({path, authed, onLogout}:{path:string; authed:boolean; onLogout:()=>void}) {
  const links=linksFor(path,authed);
- return <nav className="bottom-nav" aria-label="Student dashboard navigation">
-  {links.map(({href,label,icon:Icon})=><Link key={href} href={href} className={path===href?'active':''} data-testid={`mobile-nav-${label.toLowerCase()}`}><Icon size={17}/><span>{label}</span></Link>)}
+ const isStudentArea=authed||!publicPaths.includes(path);
+ const mobileLinks=isStudentArea?links.filter(({href})=>href!=='/profile'&&href!=='/guides'):links;
+ return <nav className="bottom-nav student-bottom-nav" aria-label="Student dashboard navigation">
+  {mobileLinks.map(({href,label,icon:Icon})=><Link key={href} href={href} className={path===href?'active':''} data-testid={`mobile-nav-${label.toLowerCase()}`}><Icon size={17}/><span>{label}</span></Link>)}
   {!authed&&<>
    <Link href="/login" data-testid="mobile-nav-login"><ArrowLeft size={17}/><span>Log in</span></Link>
    <Link href="/signup" data-testid="mobile-nav-signup"><Plus size={17}/><span>Sign up</span></Link>
@@ -183,7 +189,7 @@ function BottomNav({path, authed, onLogout}:{path:string; authed:boolean; onLogo
 }
 function AdminNav({path,onLogout}:{path:string;onLogout:()=>void}) {
  return <nav className="bottom-nav" aria-label="Admin dashboard navigation">
-  {adminLinks.map(({href,label,icon:Icon})=><Link key={href} href={href} className={path===href?'active':''} data-testid={`mobile-admin-${label.toLowerCase()}`}><Icon size={17}/><span>{label}</span></Link>)}
+  {adminLinks.filter(({href})=>href!=='/admin/opportunities'&&href!=='/admin/profile').map(({href,label,icon:Icon})=><Link key={href} href={href} className={path===href?'active':''} data-testid={`mobile-admin-${label.toLowerCase()}`}><Icon size={17}/><span>{label}</span></Link>)}
   <button type="button" onClick={onLogout} data-testid="button-admin-mobile-logout"><LogOut size={17}/><span>Log out</span></button>
  </nav>
 }
