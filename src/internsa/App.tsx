@@ -188,7 +188,7 @@ function BottomNav({path, authed, onLogout}:{path:string; authed:boolean; onLogo
  </nav>
 }
 function AdminNav({path,onLogout}:{path:string;onLogout:()=>void}) {
- return <nav className="bottom-nav" aria-label="Admin dashboard navigation">
+ return <nav className="bottom-nav admin-bottom-nav" aria-label="Admin dashboard navigation">
   {adminLinks.filter(({href})=>href!=='/admin/opportunities'&&href!=='/admin/profile').map(({href,label,icon:Icon})=><Link key={href} href={href} className={path===href?'active':''} data-testid={`mobile-admin-${label.toLowerCase()}`}><Icon size={17}/><span>{label}</span></Link>)}
   <button type="button" onClick={onLogout} data-testid="button-admin-mobile-logout"><LogOut size={17}/><span>Log out</span></button>
  </nav>

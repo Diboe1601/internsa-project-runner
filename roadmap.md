@@ -4,3 +4,4 @@
 - [x] Load and save student profiles through the existing database and refresh completion from saved data.
 - [x] Verify profile persistence and completion tests.
 - [ ] Verify saving and realtime refresh with a live student session — external account sessions are not available in this workspace.
+- [x] Redesign mobile student and admin navigation as a single-row floating iOS-style dock.
