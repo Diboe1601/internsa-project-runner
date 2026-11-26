@@ -5,3 +5,4 @@
 - [x] Verify profile persistence and completion tests.
 - [ ] Verify saving and realtime refresh with a live student session — external account sessions are not available in this workspace.
 - [x] Redesign mobile student and admin navigation as a single-row floating iOS-style dock.
+- [x] Add an accessible notifications button before Profile on both mobile dashboards.

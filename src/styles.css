@@ -348,10 +348,21 @@
     transition:box-shadow .22s ease,background-color .22s ease;
   }
   .bottom-nav::-webkit-scrollbar{display:none}
-  .mobile-profile-bar{position:sticky;top:0;z-index:24;display:flex;min-height:48px;align-items:center;justify-content:flex-end;padding:4px 16px;border-bottom:1px solid hsl(var(--border));background:hsl(var(--background))}
+  .mobile-profile-bar{position:sticky;top:0;z-index:24;display:flex;min-height:48px;align-items:center;justify-content:flex-end;gap:8px;padding:4px 16px;border-bottom:1px solid hsl(var(--border));background:hsl(var(--background))}
+  .mobile-notifications-button{position:relative;flex:0 0 38px;width:38px;height:36px;padding:0;border-color:hsl(var(--border));border-radius:var(--radius-md);background:hsl(var(--card));color:hsl(var(--foreground))}
+  .mobile-notifications-button svg{color:hsl(var(--primary))}
+  .mobile-notification-badge{position:absolute;top:-5px;right:-5px;display:grid;min-width:17px;height:17px;place-items:center;padding:0 4px;border:2px solid hsl(var(--background));border-radius:999px;background:hsl(var(--primary));color:hsl(var(--primary-foreground));font-size:9px;font-weight:800;line-height:1}
   .mobile-profile-link{display:inline-flex;min-height:36px;align-items:center;justify-content:center;gap:6px;padding:6px 10px;border:1px solid hsl(var(--border));border-radius:var(--radius-md);background:hsl(var(--card));color:hsl(var(--foreground));font-size:11px;font-weight:700;text-decoration:none}
   .mobile-profile-link svg{color:hsl(var(--primary))}
   .mobile-profile-link:focus-visible{outline:2px solid hsl(var(--ring));outline-offset:2px}
+  .mobile-notification-list{display:grid;gap:8px}
+  .mobile-notification-link{display:grid;grid-template-columns:34px minmax(0,1fr) 16px;align-items:center;gap:10px;padding:11px;border:1px solid hsl(var(--border));border-radius:var(--radius-md);background:hsl(var(--card));color:hsl(var(--foreground));text-decoration:none}
+  .mobile-notification-link:hover{background:hsl(var(--muted))}
+  .mobile-notification-count{display:grid;width:30px;height:30px;place-items:center;border-radius:50%;background:hsl(var(--accent));color:hsl(var(--accent-foreground));font-size:11px;font-weight:800}
+  .mobile-notification-link strong,.mobile-notification-link small{display:block}
+  .mobile-notification-link strong{font-size:12px;line-height:1.35}
+  .mobile-notification-link small{margin-top:3px;color:hsl(var(--muted-foreground));font-size:10px;line-height:1.45}
+  .mobile-notification-empty{margin:0;padding:18px 10px;color:hsl(var(--muted-foreground));font-size:12px;text-align:center}
   .bottom-nav a,.bottom-nav button{
     display:flex;
     flex:0 0 auto;

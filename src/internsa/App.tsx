@@ -4,7 +4,7 @@ import {
   Activity as ActivityIcon, ArrowLeft, ArrowRight, Bookmark, BriefcaseBusiness, Check,
   ChevronDown, ExternalLink, LayoutDashboard, MapPin, Search, ShieldAlert,
   ShieldCheck, X, ChartNoAxesCombined, Plus, Pencil, Archive, Share2, BookOpen,
-  House, UserRound, LogOut,
+  House, UserRound, LogOut, Bell,
 } from 'lucide-react';
 import {
   type Activity, type AdminProfile, defaultAdminProfile, type Guide, type GuideStatus, type Opportunity, type Profile, type Report, type Store, emptyGuide, emptyOpportunity,
@@ -109,7 +109,7 @@ function AppShell() {
         <Route><NotFound/></Route>
       </Switch>
     </>:<>
-     {(isAdmin||!!user||!publicPaths.includes(location))&&<MobileProfileShortcut href={isAdmin?'/admin/profile':'/profile'}/>}
+     {(isAdmin||!!user||!publicPaths.includes(location))&&<MobileProfileShortcut href={isAdmin?'/admin/profile':'/profile'} isAdmin={isAdmin} store={store}/>}
      <div className={`dashboard-shell ${isAdmin?'admin-dashboard-shell':'student-dashboard-shell'}`}>
         {isAdmin?<AdminSidebar path={location} onLogout={handleLogout}/>:<StudentSidebar path={location} authed={!!user} onLogout={handleLogout}/>}
         <div className="dashboard-main">
@@ -171,8 +171,36 @@ function AdminSidebar({path, onLogout}:{path:string; onLogout: () => void}) {
   </div>
  </aside>
 }
-function MobileProfileShortcut({href}:{href:string}) {
- return <div className="mobile-profile-bar"><Link href={href} className="mobile-profile-link" data-testid="mobile-profile-shortcut"><UserRound size={16}/><span>Profile</span></Link></div>
+type MobileNotification = {title:string;description:string;href:string;count:number};
+function MobileProfileShortcut({href,isAdmin,store}:{href:string;isAdmin:boolean;store:Store}) {
+ const [notificationsOpen,setNotificationsOpen]=useState(false);
+ const notifications:MobileNotification[]=[];
+ if(isAdmin){
+  const settings=store.adminProfile??defaultAdminProfile;
+  const openReports=store.reports.filter(report=>report.status==='open').length;
+  const closingSoon=store.opportunities.filter(item=>isLive(item)&&daysUntil(item.closingDate)<=3).length;
+  if(settings.notifyReports&&openReports>0)notifications.push({title:'Open reports',description:`${openReports} listing report${openReports===1?'':'s'} need review.`,href:'/admin/reports',count:openReports});
+  if(settings.notifyClosing&&closingSoon>0)notifications.push({title:'Listings closing soon',description:`${closingSoon} listing${closingSoon===1?'':'s'} close within 3 days.`,href:'/admin/opportunities',count:closingSoon});
+ }else{
+  const savedClosing=store.opportunities.filter(item=>store.savedIds.includes(item.id)&&isLive(item)&&daysUntil(item.closingDate)<=7).length;
+  if(savedClosing>0)notifications.push({title:'Saved listings closing soon',description:`${savedClosing} saved listing${savedClosing===1?'':'s'} close within 7 days.`,href:'/saved',count:savedClosing});
+ }
+ const notificationCount=notifications.reduce((total,notification)=>total+notification.count,0);
+ return <>
+  <div className="mobile-profile-bar">
+   <Button type="button" variant="outline" size="icon" className="mobile-notifications-button" onClick={()=>setNotificationsOpen(true)} aria-label="Notifications" aria-haspopup="dialog" aria-expanded={notificationsOpen} title="Notifications" data-testid="button-mobile-notifications">
+    <Bell size={17}/>{notificationCount>0&&<span className="mobile-notification-badge" aria-hidden="true">{notificationCount>99?'99+':notificationCount}</span>}
+   </Button>
+   <Link href={href} className="mobile-profile-link" data-testid="mobile-profile-shortcut"><UserRound size={16}/><span>Profile</span></Link>
+  </div>
+  {notificationsOpen&&<Dialog title="Notifications" close={()=>setNotificationsOpen(false)}>
+   <div className="mobile-notification-list" data-testid="mobile-notifications-list">
+    {notifications.length?notifications.map(notification=><Link key={notification.href} href={notification.href} className="mobile-notification-link" onClick={()=>setNotificationsOpen(false)} data-testid={`mobile-notification-${notification.href.replaceAll('/','-').replace(/^-/, '')}`}>
+      <span className="mobile-notification-count" aria-hidden="true">{notification.count}</span><span><strong>{notification.title}</strong><small>{notification.description}</small></span><ArrowRight size={15}/>
+     </Link>):<p className="mobile-notification-empty" data-testid="mobile-notifications-empty">You're all caught up.</p>}
+   </div>
+  </Dialog>}
+ </>
 }
 function BottomNav({path, authed, onLogout}:{path:string; authed:boolean; onLogout:()=>void}) {
  const links=linksFor(path,authed);
