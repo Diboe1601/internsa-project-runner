@@ -78,11 +78,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "InternSA — Your Next Step" },
+      {
+        name: "description",
+        content:
+          "InternSA helps South African students find internships, bursaries, learnerships and graduate programmes across all nine provinces.",
+      },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "InternSA — Your Next Step" },
+      {
+        property: "og:description",
+        content:
+          "Find internships, bursaries, learnerships and graduate programmes across South Africa.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
